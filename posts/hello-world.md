@@ -1,8 +1,8 @@
 ---
-title: Hello, world!
+title: Chuy's world!
 slug: hello-world
 description: >-
-  This is an example blog!
+  This is Chuy's!
 tags:
   - personal
 added: "May 01 2024"
