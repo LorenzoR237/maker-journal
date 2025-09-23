@@ -2,14 +2,23 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 // Load every image under /src/images/<category>/<file>
-const modules = import.meta.glob('/src/images/*/*.{jpg,JPG,jpeg,png,webp,avif}', { eager: true });
+const modules = import.meta.glob(
+  '/src/images/*/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}',
+  { eager: true }
+);
 
 const items = Object.entries(modules).map(([path, mod]) => {
-  // path: /src/images/<category>/<file>
-  const parts = path.split('/');              // ["", "src", "images", "<category>", "<file>"]
-  const category = parts[3].toLowerCase();    // nature | travel | street
-  const img = (mod as any).default;           // { src, width, height }
-  return { src: img.src, width: img.width, height: img.height, category, alt: `${category} photo` };
+  const parts = path.split('/');
+  const category = parts[3].toLowerCase();
+  const img = (mod as any).default; // <-- the imported image object
+  return {
+    img,                            // keep the object for <Image />
+    src: img.src,                   // full file (for the lightbox href)
+    width: img.width,
+    height: img.height,
+    category,
+    alt: `${category} photo`,
+  };
 });
 
 // Build tabs from categories (index shows “All”)
@@ -31,9 +40,17 @@ const toTitle = (s) => s.charAt(0).toUpperCase() + s.slice(1);
     <div class="ph-grid">
       {items.map((it) => (
         <figure class="ph-card" data-category={it.category}>
-          <a href={it.src} data-fancybox="gallery">
-            <img src={it.src} alt={it.alt} loading="lazy" width={it.width} height={it.height} />
-          </a>
+            <a href={it.src} data-fancybox="gallery">
+            <Image
+                src={it.img}           <!-- pass the imported image object, see mapping below -->
+                alt={it.alt || ''}
+                loading="lazy"
+                decoding="async"
+                widths={[320, 480, 640, 800, 1024]}     <!-- generate small→medium thumbs -->
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                formats={['avif','webp','jpeg']}        <!-- modern formats first -->
+            />
+            </a>
         </figure>
       ))}
     </div>
