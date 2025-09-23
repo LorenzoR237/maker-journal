@@ -2,7 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 // Load every image under /src/images/<category>/<file>
-const modules = import.meta.glob('/src/images/*/*.{jpg,jpeg,png,webp,avif}', { eager: true });
+const modules = import.meta.glob('/src/images/*/*.{jpg,JPG,jpeg,png,webp,avif}', { eager: true });
 
 const items = Object.entries(modules).map(([path, mod]) => {
   // path: /src/images/<category>/<file>
