@@ -1,111 +1,58 @@
 ---
-import { Image } from "astro:assets";
-import BaseLayout from "~/layouts/BaseLayout.astro";
-import "@fancyapps/ui/dist/fancybox/fancybox.css";
+import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const images = import.meta.glob<{ default: ImageMetadata }>(
-  "../images/*.{jpg,jpeg,png,webp}",
-);
+// Load every image under /src/images/<category>/<file>
+const modules = import.meta.glob('/src/images/*/*.{jpg,jpeg,png,webp,avif}', { eager: true });
+
+const items = Object.entries(modules).map(([path, mod]) => {
+  // path: /src/images/<category>/<file>
+  const parts = path.split('/');              // ["", "src", "images", "<category>", "<file>"]
+  const category = parts[3].toLowerCase();    // nature | travel | street
+  const img = (mod as any).default;           // { src, width, height }
+  return { src: img.src, width: img.width, height: img.height, category, alt: `${category} photo` };
+});
+
+// Build tabs from categories (index shows “All”)
+const categories = Array.from(new Set(items.map(i => i.category))).sort();
+const toTitle = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 ---
 
-<BaseLayout
-  title="Astro Photo Grid"
-  description="A minimal, single-page photo gallery for Astro."
->
-  <section class="justified-gallery" id="photoswipe">
-    {
-      Object.entries(images).map(async ([_path, image], index) => {
-        const { default: imageData } = await image();
-        return (
-          <a
-            style={`--width: ${imageData.width}; --height: ${imageData.height};`}
-            href={imageData.src}
-            target="_blank"
-            data-fancybox="gallery"
-          >
-            <Image
-              format="webp"
-              src={imageData}
-              alt=""
-              height={400}
-              loading={index < 20 ? "eager" : "lazy"}
-            />
+<BaseLayout title="Photos — All" description="All photos">
+  <section class="ph-wrap">
+    <!-- Tabs as LINKS -->
+    <div class="ph-tabs" role="tablist" aria-label="Photo categories">
+      <a class="ph-tab is-active" role="tab" aria-selected="true" href="/photos">All</a>
+      {categories.map((c) => (
+        <a class="ph-tab" role="tab" aria-selected="false" href={`/photos/${c}`}>{toTitle(c)}</a>
+      ))}
+    </div>
+
+    <!-- Grid -->
+    <div class="ph-grid">
+      {items.map((it) => (
+        <figure class="ph-card" data-category={it.category}>
+          <a href={it.src} data-fancybox="gallery">
+            <img src={it.src} alt={it.alt} loading="lazy" width={it.width} height={it.height} />
           </a>
-        );
-      })
-    }
+        </figure>
+      ))}
+    </div>
   </section>
+
+  <style>
+    .ph-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .ph-tabs { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 16px; }
+    .ph-tab {
+      display:inline-block; padding:8px 12px; border-radius:999px;
+      border:1px solid #ddd; text-decoration:none; color:#333; background:#fff;
+    }
+    .ph-tab.is-active, .ph-tab:focus { border-color:#333; outline:none; }
+    .ph-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:12px; }
+    .ph-card { border-radius:8px; overflow:hidden; background:#f7f7f7; }
+    .ph-card img { width:100%; height:100%; object-fit:cover; display:block; }
+    @media (prefers-color-scheme: dark) {
+      .ph-tab { border-color:#333; background:#111; color:#ddd; }
+      .ph-card { background:#111; }
+    }
+  </style>
 </BaseLayout>
-
-<script>
-  import { Fancybox } from "@fancyapps/ui/dist/fancybox/";
-
-  Fancybox.bind("[data-fancybox]", {
-    theme: "auto",
-    mainStyle: {
-      "--f-button-width": "44px",
-      "--f-button-height": "44px",
-      "--f-button-border-radius": "50%",
-      "--f-toolbar-padding": "16px",
-    },
-    Carousel: {
-      Arrows: false,
-      Toolbar: {
-        display: {
-          left: [],
-          middle: [],
-          right: ["close"],
-        },
-      },
-      transition: "slide",
-    },
-  });
-</script>
-
-<style>
-  .justified-gallery {
-    --padding: max(2.5vw, 12px);
-    --space: max(2.5vw, 12px);
-    --min-height: clamp(200px, 20vw, 400px);
-
-    padding: var(--padding);
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space);
-
-    a {
-      flex-grow: calc(var(--width) * (100000 / var(--height)));
-      flex-basis: calc(var(--min-height) * (var(--width) / var(--height)));
-      aspect-ratio: var(--width) / var(--height);
-      overflow: hidden;
-      opacity: 1;
-      transition: all 0.05s ease-in-out;
-    }
-
-    a img {
-      display: block;
-      object-fit: cover;
-      height: 100%;
-      width: 100%;
-    }
-
-    a:focus-visible {
-      outline: 3px solid var(--outline);
-      outline-offset: 2px;
-      transform: scale(1.05);
-      z-index: 1;
-      border-radius: 2px;
-      box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    a.hidden {
-      transition: opacity 0.4s ease-in-out;
-      opacity: 0;
-    }
-
-    &::after {
-      content: " ";
-      flex-grow: 1000000000;
-    }
-  }
-</style>
