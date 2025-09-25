@@ -1,19 +1,20 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { Image as AstroImage } from "astro:assets";  // ← alias avoids any global name conflicts
 
 // Load every image under /src/images/<category>/<file>
 const modules = import.meta.glob(
-  '/src/images/*/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}',
+  "/src/images/*/*.{jpg,JPG,jpeg,JPEG,png,PNG,webp,WEBP,avif,AVIF}",
   { eager: true }
 );
 
 const items = Object.entries(modules).map(([path, mod]) => {
-  const parts = path.split('/');
+  const parts = path.split("/");
   const category = parts[3].toLowerCase();
-  const img = (mod as any).default; // <-- the imported image object
+  const img = (mod as any).default;
   return {
-    img,                            // keep the object for <Image />
-    src: img.src,                   // full file (for the lightbox href)
+    img,              // ImageMetadata object for <AstroImage />
+    src: img.src,     // full file (for lightbox href)
     width: img.width,
     height: img.height,
     category,
@@ -21,14 +22,11 @@ const items = Object.entries(modules).map(([path, mod]) => {
   };
 });
 
-// Build tabs from categories (index shows “All”)
-const categories = Array.from(new Set(items.map(i => i.category))).sort();
+const categories = Array.from(new Set(items.map((i) => i.category))).sort();
 const toTitle = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 ---
-
 <BaseLayout title="Photos — All" description="All photos">
   <section class="ph-wrap">
-    <!-- Tabs as LINKS -->
     <div class="ph-tabs" role="tablist" aria-label="Photo categories">
       <a class="ph-tab is-active" role="tab" aria-selected="true" href="/photos">All</a>
       {categories.map((c) => (
@@ -36,21 +34,20 @@ const toTitle = (s) => s.charAt(0).toUpperCase() + s.slice(1);
       ))}
     </div>
 
-    <!-- Grid -->
     <div class="ph-grid">
       {items.map((it) => (
         <figure class="ph-card" data-category={it.category}>
-            <a href={it.src} data-fancybox="gallery">
-            <Image
-                src={it.img}           <!-- pass the imported image object, see mapping below -->
-                alt={it.alt || ''}
-                loading="lazy"
-                decoding="async"
-                widths={[320, 480, 640, 800, 1024]}     <!-- generate small→medium thumbs -->
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                formats={['avif','webp','jpeg']}        <!-- modern formats first -->
+          <a href={it.src} data-fancybox="gallery">
+            <AstroImage
+              src={it.img}
+              alt={it.alt || ""}
+              loading="lazy"
+              decoding="async"
+              widths={[320, 480, 640, 800, 1024]}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              formats={["avif", "webp", "jpeg"]}
             />
-            </a>
+          </a>
         </figure>
       ))}
     </div>
@@ -73,3 +70,4 @@ const toTitle = (s) => s.charAt(0).toUpperCase() + s.slice(1);
     }
   </style>
 </BaseLayout>
+
