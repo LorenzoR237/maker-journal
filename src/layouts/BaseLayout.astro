@@ -47,46 +47,8 @@ const categories = ["people", "peculiar", "landscape"];
         </>
       )
     }
-    <style>
-      .tabs {
-        display: flex;
-        gap: 1rem;
-        justify-content: center;
-        margin: 1rem 0;
-      }
-      .tab {
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        background: #f4f4f4;
-        cursor: pointer;
-        font-size: 0.9rem;
-        text-transform: capitalize;
-        text-decoration: none;
-        color: #333;
-        transition: background 0.2s;
-      }
-      .tab:hover {
-        background: #ddd;
-      }
-      .tab.active {
-        background: #333;
-        color: #fff;
-      }
-    </style>
   </head>
   <body>
-    <!-- Category Tabs -->
-    <nav class="tabs">
-      {categories.map((cat) => (
-        <a
-          class={`tab ${Astro.url.pathname.includes(cat) ? "active" : ""}`}
-          href={`/category/${cat}`}
-        >
-          {cat}
-        </a>
-      ))}
-    </nav>
-
     <!-- Page content -->
     <slot />
   </body>
